@@ -11,6 +11,7 @@ local indicatorGui
 local updateHUD
 local indicatorsEnabled
 local m1Enabled = true
+local trainerEnabled = false
 --==================================================
 -- CONFIG
 --==================================================
@@ -837,6 +838,7 @@ createFeature(
 local miscPage = createPage("Misc")
 local waitingForKey = nil
 do
+
 local movemeKeyCard = new("Frame", {
     Size = UDim2.fromOffset(200, 100),
     BackgroundColor3 = COLORS.Panel,
@@ -1114,7 +1116,7 @@ local function updateKeybindDisplay()
 
 end
 
-local waitingForKey = nil
+local function beginKeybindChange(slot)
 
     waitingForKey = slot
 
@@ -1229,13 +1231,17 @@ createToggle(
         end
     end
 )
-end
+
+
+
+end -- misc page scope
 
 --==================================================
 -- MACROS PAGE
+
+do -- macros page scope
 --==================================================
 
-do
 local macrosPage = createPage("Macros")
 
 --==================================================
@@ -1474,7 +1480,7 @@ local macro2KeyButton = new("TextButton", {
     Position = UDim2.fromOffset(115, 42),
     Size = UDim2.fromOffset(65, 24),
     BackgroundColor3 = COLORS.Nav,
-    BackgroundTransparency = 0,5,
+    BackgroundTransparency = 0,
     BorderSizePixel = 0,
     Text = states.Misc["Macro 2 Key"].Name,
     TextColor3 = COLORS.White,
@@ -1615,7 +1621,8 @@ runMacro2Button.MouseButton1Click:Connect(function()
     task.spawn(runComboMacro2)
 end)
 
-end
+end -- macros page scope
+
 --==================================================
 -- NAVIGATION
 --==================================================
@@ -1648,6 +1655,10 @@ local function selectPage(name)
 end
 
 for _, name in ipairs({
+    "Combat",
+    "Movement",
+    "Training",
+    "Visuals",
     "Misc",
     "Macros"
 }) do
@@ -2507,7 +2518,6 @@ local lastAnimId      = nil
 local m1Target        = nil
 local prevM1Highlight = nil
 
-
 local aimTarget          = nil
 local aimTargetLeft      = false
 local aimNoclipTarget    = nil
@@ -2522,7 +2532,6 @@ local lastUnblockTime  = 0
 local prevVelMag     = 0
 local recentSidedash = {}
 
-local trainerEnabled = false
 local activeRings    = {}
 local charRoot, charHum
 
@@ -3207,6 +3216,7 @@ uis.InputEnded:Connect(function(input)
 end)
 
 
+
 local function handleRagdollState(char)
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     if not hum then return false end
@@ -3255,7 +3265,7 @@ rs.RenderStepped:Connect(function(dt)
         dashRing.CFrame = CFrame.new(basePos)
     end
 
-        if M1Config.Enabled and m1Enabled and cam.CameraType ~= Enum.CameraType.Scriptable then
+    if M1Config.Enabled and m1Enabled and cam.CameraType ~= Enum.CameraType.Scriptable then
 
         local currentAnimId = getPlayingM1Anim(char)
 
@@ -3275,7 +3285,7 @@ rs.RenderStepped:Connect(function(dt)
 
         if lockTimer > 0 then lockTimer = lockTimer - dt end
 
-                local shouldLock = lockTimer > 0 and m1Target ~= nil and m1Target.Parent ~= nil
+        local shouldLock = lockTimer > 0 and m1Target ~= nil and m1Target.Parent ~= nil
 
         if not shouldLock then
             m1Target = nil
@@ -3406,7 +3416,7 @@ rs.RenderStepped:Connect(function(dt)
             end
         end
     else
-                if not handleRagdollState(char) and not lockOn and not (M1Config.Enabled and m1Enabled and lockTimer > 0) then
+        if not handleRagdollState(char) and not lockOn and not (M1Config.Enabled and m1Enabled and lockTimer > 0) then
             hum.AutoRotate = true
         end
     end
