@@ -1,0 +1,3426 @@
+print("Hello, world!");local plrs = game:GetService("Players")
+
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local guiParent = game:GetService("CoreGui")
+local indicatorGui
+local updateHUD
+local indicatorsEnabled
+local m1Enabled = true
+--==================================================
+-- CONFIG
+--==================================================
+
+local COLORS = {
+    Background = Color3.fromRGB(35, 8, 55),
+    Sidebar    = Color3.fromRGB(45, 10, 70),
+    Panel      = Color3.fromRGB(55, 12, 85),
+
+    Border     = Color3.fromRGB(180, 70, 255),
+    Text       = Color3.fromRGB(225, 190, 255),
+    Muted      = Color3.fromRGB(175, 115, 220),
+    White      = Color3.fromRGB(255, 245, 255),
+
+    Purple     = Color3.fromRGB(180, 60, 255),
+    PurpleDark = Color3.fromRGB(100, 20, 150),
+
+    ToggleOff  = Color3.fromRGB(65, 20, 90),
+    TopBar     = Color3.fromRGB(25, 5, 40),
+    Content    = Color3.fromRGB(28, 6, 45),
+    Nav        = Color3.fromRGB(32, 8, 50),
+    NavHover   = Color3.fromRGB(65, 15, 95),
+    NavActive  = Color3.fromRGB(90, 20, 130),
+}
+
+--==================================================
+-- CLEAN OLD UI
+--==================================================
+
+local old = guiParent:FindFirstChild("S O P H Y")
+
+if old then
+    old:Destroy()
+end
+
+--==================================================
+-- HELPERS
+--==================================================
+
+local function new(class, props, parent)
+    local obj = Instance.new(class)
+
+    for key, value in pairs(props or {}) do
+        obj[key] = value
+    end
+
+    obj.Parent = parent
+
+    return obj
+end
+
+local function corner(parent, radius)
+    return new("UICorner", {
+        CornerRadius = UDim.new(0, radius or 5)
+    }, parent)
+end
+
+local function stroke(parent, color, thickness)
+    return new("UIStroke", {
+        Color = color or COLORS.Border,
+        Thickness = thickness or 1,
+        Transparency = 0
+    }, parent)
+end
+
+local function label(parent, text, size, color, font)
+    return new("TextLabel", {
+        BackgroundTransparency = 1,
+        Text = text,
+        TextColor3 = color or COLORS.Text,
+        TextSize = size or 13,
+        Font = font or Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextYAlignment = Enum.TextYAlignment.Center
+    }, parent)
+end
+
+--==================================================
+-- MAIN GUI
+--==================================================
+
+local gui = new("ScreenGui", {
+    Name = "S O P H Y",
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+}, guiParent)
+
+--==================================================
+-- ANIMATED IMAGE / GIF FRAME PLAYER
+--==================================================
+
+local function createAnimatedImage(parent, position, size, frames, fps)
+    local image = Instance.new("ImageLabel")
+    
+    image.Name = "AnimatedGIF"
+    image.Parent = parent
+    
+    image.Position = position
+    image.Size = size
+    
+    image.BackgroundTransparency = 1
+    image.BorderSizePixel = 0
+    image.ImageTransparency = 0
+    image.ScaleType = Enum.ScaleType.Stretch
+    
+    image.ZIndex = 0
+
+    local currentFrame = 1
+    local frameTime = 1 / fps
+
+    task.spawn(function()
+        while image and image.Parent do
+            image.Image = frames[currentFrame]
+
+            currentFrame = currentFrame + 1
+
+            if currentFrame > #frames then
+                currentFrame = 1
+            end
+
+            task.wait(frameTime)
+        end
+    end)
+
+    return image
+end
+
+
+
+local main = new("Frame", {
+    Name = "Main",
+    Size = UDim2.fromOffset(650, 410),
+    Position = UDim2.new(0.5, -325, 0.5, -205),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0
+}, gui)
+
+
+local gifFrames = {
+    "rbxassetid://124530514700812",
+    "rbxassetid://120990595489759",
+    "rbxassetid://78471523615143",
+    "rbxassetid://105396976999683",
+    "rbxassetid://131205127753390",
+    "rbxassetid://102541767398894",
+    "rbxassetid://128922530834244",
+    "rbxassetid://112063570952313",
+    "rbxassetid://78091881279199",
+    "rbxassetid://97430346918565",
+    "rbxassetid://118284503678651",
+    "rbxassetid://128901972369415",
+    "rbxassetid://115115916653390",
+    "rbxassetid://112779680012211",
+    "rbxassetid://85737408491874",
+    "rbxassetid://83417475225934",
+    "rbxassetid://73434216034284",
+    "rbxassetid://80646792915176",
+    "rbxassetid://125281590273162",
+    "rbxassetid://104537822072290",
+    "rbxassetid://135708282178794",
+    "rbxassetid://75525231352641",
+    "rbxassetid://124114156413212",
+    "rbxassetid://112650409248143",
+    "rbxassetid://74153761890474",
+    "rbxassetid://112557401429612",
+    "rbxassetid://89261942512145",
+    "rbxassetid://138750653848378",
+    "rbxassetid://87957775317271",
+    "rbxassetid://120537071291399",
+    "rbxassetid://103666316721568",
+    "rbxassetid://116153508348560",
+    "rbxassetid://111465089505327",
+    "rbxassetid://89696322600237",
+    "rbxassetid://123114989441599",
+    "rbxassetid://83642469579153",
+    "rbxassetid://132356627915225",
+    "rbxassetid://126693488790153",
+    "rbxassetid://99832532399198",
+    "rbxassetid://136113803331232",
+    "rbxassetid://109748835278466",
+    "rbxassetid://70530926700440",
+    "rbxassetid://118605699985760",
+    "rbxassetid://115923965217809",
+    "rbxassetid://136940765634901",
+    "rbxassetid://135740469165162",
+    "rbxassetid://86748927265031",
+    "rbxassetid://128983795096118",
+    "rbxassetid://138085179704173",
+    "rbxassetid://102276283079856",
+    "rbxassetid://138214784999536",
+    "rbxassetid://96162720860557",
+    "rbxassetid://79985582242731",
+    "rbxassetid://137756224366156",
+}
+
+local animatedBackground = createAnimatedImage(
+    main,
+    UDim2.fromScale(0, 0),
+    UDim2.fromScale(1, 1),
+    gifFrames,
+    12
+)
+
+animatedBackground.ZIndex = 0
+
+--==================================================
+-- MENU ANIMATION / GLOW
+--==================================================
+
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.Position = UDim2.fromScale(0.5, 0.5)
+
+local menuScale = Instance.new("UIScale")
+menuScale.Name = "MenuScale"
+menuScale.Scale = 0.88
+menuScale.Parent = main
+
+local menuGlow = Instance.new("UIStroke")
+menuGlow.Name = "MenuGlow"
+menuGlow.Color = COLORS.Purple
+menuGlow.Thickness = 2
+menuGlow.Transparency = 1
+menuGlow.Parent = main
+
+
+corner(main, 5)
+stroke(main, COLORS.Border, 1)
+
+--==================================================
+-- TOP BAR
+--==================================================
+
+local top = new("Frame", {
+    Size = UDim2.new(1, 0, 0, 48),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0
+}, main)
+
+
+local title = label(
+    top,
+    "Sophy",
+    20,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+title.Position = UDim2.fromOffset(20, 0)
+title.Size = UDim2.fromOffset(180, 48)
+
+local accent = new("Frame", {
+    Position = UDim2.fromOffset(20, 42),
+    Size = UDim2.fromOffset(65, 2),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, top)
+
+local version = label(
+    top,
+    "SOPHY UD",
+    11,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+version.Position = UDim2.new(1, -110, 0, 0)
+version.Size = UDim2.fromOffset(90, 48)
+version.TextXAlignment = Enum.TextXAlignment.Right
+
+--==================================================
+-- SIDEBAR change
+--==================================================
+
+local sidebar = new("Frame", {
+    Position = UDim2.fromOffset(0, 48),
+    Size = UDim2.fromOffset(175, 362),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0
+}, main)
+
+local sidebarTitle = label(
+    sidebar,
+    "FEATURES",
+    10,
+    COLORS.Muted,
+    Enum.Font.GothamBold
+)
+
+sidebarTitle.Position = UDim2.fromOffset(18, 18)
+sidebarTitle.Size = UDim2.fromOffset(130, 22)
+
+local navContainer = new("Frame", {
+    Position = UDim2.fromOffset(10, 48),
+    Size = UDim2.new(1, -20, 1, -58),
+    BackgroundTransparency = 1
+}, sidebar)
+
+local navLayout = new("UIListLayout", {
+    Padding = UDim.new(0, 4),
+    SortOrder = Enum.SortOrder.LayoutOrder
+}, navContainer)
+
+--==================================================
+-- CONTENT
+--==================================================
+
+local content = new("Frame", {
+    Position = UDim2.fromOffset(175, 48),
+    Size = UDim2.new(1, -175, 1, -48),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ZIndex = 2
+}, main)
+
+
+local contentTitle = label(
+    content,
+    "Combat",
+    15,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+contentTitle.Position = UDim2.fromOffset(22, 18)
+contentTitle.Size = UDim2.fromOffset(300, 25)
+
+--==================================================
+-- STATE
+--==================================================
+
+local states = {
+    ["Combat"] = {
+        ["Phantom Lock"] = true,
+        ["Rapid Strike"] = false,
+        ["Target Assist"] = true,
+        ["Guard Assist"] = false,
+    },
+
+    ["Movement"] = {
+    ["Velocity Boost"] = true,
+    ["Side Shift"] = false,
+    ["Air Control"] = false,
+    ["Side Dash Key"] = Enum.KeyCode.C,
+    ["Moveme Release Key"] = Enum.KeyCode.W,
+},
+
+    ["Training"] = {
+        ["Range Trainer"] = false,
+        ["Timing Guide"] = false,
+        ["Practice Mode"] = false,
+    },
+
+    ["Visuals"] = {
+        ["Target Marker"] = true,
+        ["Range Circle"] = false,
+        ["Debug Info"] = false,
+    },
+["Misc"] = {
+    ["Menu Key 1"] = Enum.KeyCode.B,
+    ["Menu Key 2"] = Enum.KeyCode.P,
+    ["Indicators"] = true,
+
+    -- Macro 1
+    ["Combo Macro"] = false,
+    ["Macro Key"] = Enum.KeyCode.G,
+
+    -- Macro 2
+    ["Combo Macro 2"] = false,
+    ["Macro 2 Key"] = Enum.KeyCode.H,
+},
+}
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+--==================================================
+-- COMBO MACRO
+-- S -> 7ms -> 3 -> 1ms -> Q -> 20ms -> Q -> 3ms -> 3 -> 11ms -> S
+--==================================================
+
+local comboMacroEnabled = states.Misc["Combo Macro"]
+local comboMacroRunning = false
+
+local function runComboMacro()
+    if comboMacroRunning then return end
+    if not comboMacroEnabled then return end
+
+    comboMacroRunning = true
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.S, false, game)
+    task.wait(0.007)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Three, false, game)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Three, false, game)
+    task.wait(0.001)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+    task.wait(0.020)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+    task.wait(0.003)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Three, false, game)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Three, false, game)
+    task.wait(0.011)
+
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.S, false, game)
+
+    comboMacroRunning = false
+end
+
+--==================================================
+-- COMBO MACRO 2
+-- S -> 7ms -> 2 -> 1ms -> Q -> 20ms -> Q
+-- -> 3ms -> 2 -> 11ms -> S
+--==================================================
+
+local comboMacro2Enabled = states.Misc["Combo Macro 2"]
+local comboMacro2Running = false
+
+local function runComboMacro2()
+    if comboMacro2Running then
+        return
+    end
+
+    if not comboMacro2Enabled then
+        return
+    end
+
+    comboMacro2Running = true
+
+    -- Hold S
+    VirtualInputManager:SendKeyEvent(
+        true,
+        Enum.KeyCode.S,
+        false,
+        game
+    )
+
+    task.wait(0.007)
+
+    -- Press 2 while S is held
+    VirtualInputManager:SendKeyEvent(
+        true,
+        Enum.KeyCode.Two,
+        false,
+        game
+    )
+
+    VirtualInputManager:SendKeyEvent(
+        false,
+        Enum.KeyCode.Two,
+        false,
+        game
+    )
+
+    task.wait(0.001)
+
+    -- Press Q while S is still held
+    VirtualInputManager:SendKeyEvent(
+        true,
+        Enum.KeyCode.Q,
+        false,
+        game
+    )
+
+    task.wait(0.020)
+
+    -- Release Q
+    VirtualInputManager:SendKeyEvent(
+        false,
+        Enum.KeyCode.Q,
+        false,
+        game
+    )
+
+    task.wait(0.003)
+
+    -- Press 2
+    VirtualInputManager:SendKeyEvent(
+        true,
+        Enum.KeyCode.Two,
+        false,
+        game
+    )
+
+    VirtualInputManager:SendKeyEvent(
+        false,
+        Enum.KeyCode.Two,
+        false,
+        game
+    )
+
+    task.wait(0.011)
+
+    -- Release S
+    VirtualInputManager:SendKeyEvent(
+        false,
+        Enum.KeyCode.S,
+        false,
+        game
+    )
+
+    comboMacro2Running = false
+end
+
+
+--==================================================
+-- TOGGLE CREATION
+--==================================================
+
+local function createToggle(parent, text, enabled, callback)
+
+    local button = new("TextButton", {
+        Size = UDim2.fromOffset(34, 18),
+        Position = UDim2.new(1, -48, 0.5, -9),
+        BackgroundColor3 = enabled and COLORS.Purple or COLORS.ToggleOff,
+        BorderSizePixel = 0,
+        Text = "",
+        AutoButtonColor = false
+    }, parent)
+
+    corner(button, 9)
+
+    local knob = new("Frame", {
+        Size = UDim2.fromOffset(12, 12),
+
+        Position = enabled
+            and UDim2.new(1, -15, 0.5, -6)
+            or UDim2.fromOffset(3, 3),
+
+        BackgroundColor3 = Color3.fromRGB(245, 235, 255),
+        BorderSizePixel = 0
+    }, button)
+
+    corner(knob, 8)
+
+    local state = enabled
+
+    button.MouseButton1Click:Connect(function()
+
+        state = not state
+
+        button.BackgroundColor3 =
+            state and COLORS.Purple or COLORS.ToggleOff
+
+        local targetPosition = state
+            and UDim2.new(1, -15, 0.5, -6)
+            or UDim2.fromOffset(3, 3)
+
+        TweenService:Create(
+            knob,
+            TweenInfo.new(
+                0.2,
+                Enum.EasingStyle.Quad,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Position = targetPosition
+            }
+        ):Play()
+
+        if callback then
+            callback(state)
+        end
+    end)
+
+    return button
+end
+
+--==================================================
+-- FEATURE CARD
+--==================================================
+
+local function createFeature(parent, name, description, enabled, callback)
+
+    local card = new("Frame", {
+        Size = UDim2.fromOffset(200, 76),
+        BackgroundColor3 = COLORS.Panel,
+        BackgroundTransparency = 0.15,
+        BorderSizePixel = 0
+
+
+    }, parent)
+
+    corner(card, 6)
+    stroke(card, COLORS.Border, 1)
+
+    local icon = new("Frame", {
+        Position = UDim2.fromOffset(12, 15),
+        Size = UDim2.fromOffset(8, 8),
+        BackgroundColor3 = COLORS.Purple,
+        BackgroundTransparency = 0.15,
+        BorderSizePixel = 0
+    }, card)
+
+    corner(icon, 8)
+
+    local title = label(
+        card,
+        name,
+        12,
+        COLORS.White,
+        Enum.Font.GothamBold
+    )
+
+    title.Position = UDim2.fromOffset(28, 8)
+    title.Size = UDim2.fromOffset(125, 24)
+
+    local desc = label(
+        card,
+        description,
+        9,
+        COLORS.Muted,
+        Enum.Font.Gotham
+    )
+
+    desc.Position = UDim2.fromOffset(28, 29)
+    desc.Size = UDim2.fromOffset(145, 30)
+    desc.TextWrapped = true
+
+    createToggle(card, "", enabled, callback)
+
+    return card
+end
+
+--==================================================
+-- PAGE SYSTEM
+--==================================================
+
+local pages = {}
+
+local function createPage(name)
+
+    local page = new("ScrollingFrame", {
+        Name = name,
+        Position = UDim2.fromOffset(20, 55),
+        Size = UDim2.new(1, -40, 1, -70),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = COLORS.Purple,
+        CanvasSize = UDim2.fromOffset(0, 0),
+        Visible = false
+    }, content)
+
+    local grid = new("UIListLayout", {
+        FillDirection = Enum.FillDirection.Horizontal,
+        Wraps = true,
+        Padding = UDim.new(0, 10),
+        SortOrder = Enum.SortOrder.LayoutOrder
+    }, page)
+
+    grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+
+        page.CanvasSize = UDim2.fromOffset(
+            0,
+            grid.AbsoluteContentSize.Y + 10
+        )
+
+    end)
+
+    pages[name] = page
+
+    return page
+end
+
+--==================================================
+-- COMBAT PAGE
+--==================================================
+
+local combatPage = createPage("Combat")
+
+createFeature(
+    combatPage,
+    "Phantom Lock",
+    "Locks movement toward nearby targets.",
+    states.Combat["Phantom Lock"],
+    function(v)
+        states.Combat["Phantom Lock"] = v
+    end
+)
+
+createFeature(
+    combatPage,
+    "Rapid Strike",
+    "Automatic attack training control.",
+    states.Combat["Rapid Strike"],
+    function(v)
+        states.Combat["Rapid Strike"] = v
+    end
+)
+
+createFeature(
+    combatPage,
+    "Target Assist",
+    "Smooth target tracking assistance.",
+    states.Combat["Target Assist"],
+    function(v)
+        states.Combat["Target Assist"] = v
+    end
+)
+
+createFeature(
+    combatPage,
+    "Guard Assist",
+    "Practice defensive timing.",
+    states.Combat["Guard Assist"],
+    function(v)
+        states.Combat["Guard Assist"] = v
+    end
+)
+
+--==================================================
+-- MOVEMENT PAGE
+--==================================================
+
+local movementPage = createPage("Movement")
+
+createFeature(
+    movementPage,
+    "Velocity Boost",
+    "Adjust movement acceleration.",
+    states.Movement["Velocity Boost"],
+    function(v)
+        states.Movement["Velocity Boost"] = v
+    end
+)
+
+createFeature(
+    movementPage,
+    "Side Shift",
+    "Movement side-step modifier.",
+    states.Movement["Side Shift"],
+    function(v)
+        states.Movement["Side Shift"] = v
+    end
+)
+
+createFeature(
+    movementPage,
+    "Air Control",
+    "Additional aerial movement control.",
+    states.Movement["Air Control"],
+    function(v)
+        states.Movement["Air Control"] = v
+    end
+)
+
+--==================================================
+-- TRAINING PAGE
+--==================================================
+
+local trainingPage = createPage("Training")
+
+createFeature(
+    trainingPage,
+    "Range Trainer",
+    "Displays your current training range.",
+    states.Training["Range Trainer"],
+    function(v)
+        states.Training["Range Trainer"] = v
+    end
+)
+
+createFeature(
+    trainingPage,
+    "Timing Guide",
+    "Visual timing assistance for practice.",
+    states.Training["Timing Guide"],
+    function(v)
+        states.Training["Timing Guide"] = v
+    end
+)
+
+createFeature(
+    trainingPage,
+    "Practice Mode",
+    "Enables additional training indicators.",
+    states.Training["Practice Mode"],
+    function(v)
+        states.Training["Practice Mode"] = v
+    end
+)
+
+--==================================================
+-- VISUALS PAGE
+--==================================================
+
+local visualsPage = createPage("Visuals")
+
+createFeature(
+    visualsPage,
+    "Target Marker",
+    "Highlights the current training target.",
+    states.Visuals["Target Marker"],
+    function(v)
+        states.Visuals["Target Marker"] = v
+    end
+)
+
+createFeature(
+    visualsPage,
+    "Range Circle",
+    "Shows the configured practice radius.",
+    states.Visuals["Range Circle"],
+    function(v)
+        states.Visuals["Range Circle"] = v
+    end
+)
+
+createFeature(
+    visualsPage,
+    "Debug Info",
+    "Displays additional diagnostic information.",
+    states.Visuals["Debug Info"],
+    function(v)
+        states.Visuals["Debug Info"] = v
+    end
+)
+
+--==================================================
+-- MISC PAGE
+--==================================================
+
+local miscPage = createPage("Misc")
+
+local movemeKeyCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 100),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, miscPage)
+
+corner(movemeKeyCard, 6)
+stroke(movemeKeyCard, COLORS.Border, 1)
+
+local movemeIcon = new("Frame", {
+    Position = UDim2.fromOffset(12, 15),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, movemeKeyCard)
+
+corner(movemeIcon, 8)
+
+local movemeTitle = label(
+    movemeKeyCard,
+    "Moveme Release Key",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+movemeTitle.Position = UDim2.fromOffset(28, 8)
+movemeTitle.Size = UDim2.fromOffset(150, 22)
+
+local movemeDesc = label(
+    movemeKeyCard,
+    "Key used to release moveme velocity.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+movemeDesc.Position = UDim2.fromOffset(28, 30)
+movemeDesc.Size = UDim2.fromOffset(155, 30)
+movemeDesc.TextWrapped = true
+
+local movemeKeyButton = new("TextButton", {
+    Position = UDim2.fromOffset(28, 68),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BorderSizePixel = 0,
+    Text = states.Movement["Moveme Release Key"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, movemeKeyCard)
+
+corner(movemeKeyButton, 4)
+stroke(movemeKeyButton, COLORS.Border, 1)
+
+local waitingForMovemeKey = false
+
+movemeKeyButton.MouseButton1Click:Connect(function()
+    waitingForMovemeKey = true
+    movemeKeyButton.Text = "PRESS KEY"
+    movemeKeyButton.BackgroundColor3 = COLORS.NavActive
+end)
+
+UIS.InputBegan:Connect(function(input)
+    if not waitingForMovemeKey then
+        return
+    end
+
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.Unknown then
+        return
+    end
+
+    states.Movement["Moveme Release Key"] = input.KeyCode
+
+    movemeKeyButton.Text = input.KeyCode.Name
+    movemeKeyButton.BackgroundColor3 = COLORS.Nav
+
+    waitingForMovemeKey = false
+end)
+
+
+local sideDashKeyCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 100),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, miscPage)
+
+corner(sideDashKeyCard, 6)
+stroke(sideDashKeyCard, COLORS.Border, 1)
+
+local sideDashIcon = new("Frame", {
+    Position = UDim2.fromOffset(12, 15),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, sideDashKeyCard)
+
+corner(sideDashIcon, 8)
+
+local sideDashTitle = label(
+    sideDashKeyCard,
+    "Side Dash Boost Key",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+sideDashTitle.Position = UDim2.fromOffset(28, 8)
+sideDashTitle.Size = UDim2.fromOffset(150, 22)
+
+local sideDashDesc = label(
+    sideDashKeyCard,
+    "Change the key used to toggle Side Dash Boost.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+sideDashDesc.Position = UDim2.fromOffset(28, 30)
+sideDashDesc.Size = UDim2.fromOffset(155, 30)
+sideDashDesc.TextWrapped = true
+
+local sideDashKeyButton = new("TextButton", {
+    Position = UDim2.fromOffset(28, 68),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BorderSizePixel = 0,
+    Text = states.Movement["Side Dash Key"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, sideDashKeyCard)
+
+corner(sideDashKeyButton, 4)
+stroke(sideDashKeyButton, COLORS.Border, 1)
+
+local waitingForSideDashKey = false
+
+sideDashKeyButton.MouseButton1Click:Connect(function()
+    waitingForSideDashKey = true
+    sideDashKeyButton.Text = "PRESS KEY"
+    sideDashKeyButton.BackgroundColor3 = COLORS.NavActive
+end)
+
+UIS.InputBegan:Connect(function(input)
+
+    if not waitingForSideDashKey then
+        return
+    end
+
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.Unknown then
+        return
+    end
+
+    states.Movement["Side Dash Key"] = input.KeyCode
+SideDashBoostKey = input.KeyCode
+
+sideDashKeyButton.Text = input.KeyCode.Name
+
+    sideDashKeyButton.BackgroundColor3 = COLORS.Nav
+
+    waitingForSideDashKey = false
+
+end)
+
+
+local keybindCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 100),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+
+
+}, miscPage)
+
+corner(keybindCard, 6)
+stroke(keybindCard, COLORS.Border, 1)
+
+local keybindIcon = new("Frame", {
+    Position = UDim2.fromOffset(12, 15),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, keybindCard)
+
+corner(keybindIcon, 8)
+
+local keybindTitle = label(
+    keybindCard,
+    "Menu Keybind",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+keybindTitle.Position = UDim2.fromOffset(28, 8)
+keybindTitle.Size = UDim2.fromOffset(150, 22)
+
+local keybindDesc = label(
+    keybindCard,
+    "Change the keys used to open/close the menu.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+keybindDesc.Position = UDim2.fromOffset(28, 30)
+keybindDesc.Size = UDim2.fromOffset(155, 30)
+keybindDesc.TextWrapped = true
+
+--==================================================
+-- KEYBIND BUTTONS
+--==================================================
+
+local UserInputService = game:GetService("UserInputService")
+
+local key1Button = new("TextButton", {
+    Position = UDim2.fromOffset(28, 68),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BorderSizePixel = 0,
+    Text = states.Misc["Menu Key 1"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, keybindCard)
+
+corner(key1Button, 4)
+stroke(key1Button, COLORS.Border, 1)
+
+local plusLabel = label(
+    keybindCard,
+    "+",
+    12,
+    COLORS.Muted,
+    Enum.Font.GothamBold
+)
+
+plusLabel.Position = UDim2.fromOffset(96, 68)
+plusLabel.Size = UDim2.fromOffset(15, 24)
+plusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local key2Button = new("TextButton", {
+    Position = UDim2.fromOffset(115, 68),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BorderSizePixel = 0,
+    Text = states.Misc["Menu Key 2"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, keybindCard)
+
+corner(key2Button, 4)
+stroke(key2Button, COLORS.Border, 1)
+
+local function updateKeybindDisplay()
+
+    key1Button.Text = states.Misc["Menu Key 1"].Name
+    key2Button.Text = states.Misc["Menu Key 2"].Name
+
+end
+
+local waitingForKey = nil
+
+local function beginKeybindChange(slot)
+
+    waitingForKey = slot
+
+    if slot == 1 then
+        key1Button.Text = "PRESS KEY"
+        key1Button.BackgroundColor3 = COLORS.NavActive
+
+    elseif slot == 2 then
+        key2Button.Text = "PRESS KEY"
+        key2Button.BackgroundColor3 = COLORS.NavActive
+    end
+
+end
+
+key1Button.MouseButton1Click:Connect(function()
+    beginKeybindChange(1)
+end)
+
+key2Button.MouseButton1Click:Connect(function()
+    beginKeybindChange(2)
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then
+        return
+    end
+
+    if not waitingForKey then
+        return
+    end
+
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.Unknown then
+        return
+    end
+
+    if waitingForKey == 1 then
+        states.Misc["Menu Key 1"] = input.KeyCode
+
+    elseif waitingForKey == 2 then
+        states.Misc["Menu Key 2"] = input.KeyCode
+    end
+
+    waitingForKey = nil
+
+    key1Button.BackgroundColor3 = COLORS.Nav
+    key2Button.BackgroundColor3 = COLORS.Nav
+
+    updateKeybindDisplay()
+end)
+
+
+--==================================================
+-- INDICATORS TOGGLE
+--==================================================
+
+local indicatorsCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 76),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, miscPage)
+
+corner(indicatorsCard, 6)
+stroke(indicatorsCard, COLORS.Border, 1)
+
+local indicatorsIcon = new("Frame", {
+    Position = UDim2.fromOffset(12, 15),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, indicatorsCard)
+
+corner(indicatorsIcon, 8)
+
+local indicatorsTitle = label(
+    indicatorsCard,
+    "Indicators",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+indicatorsTitle.Position = UDim2.fromOffset(28, 8)
+indicatorsTitle.Size = UDim2.fromOffset(125, 24)
+
+local indicatorsDesc = label(
+    indicatorsCard,
+    "Show or hide the feature indicators on the left side.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+indicatorsDesc.Position = UDim2.fromOffset(28, 29)
+indicatorsDesc.Size = UDim2.fromOffset(145, 30)
+indicatorsDesc.TextWrapped = true
+
+createToggle(
+    indicatorsCard,
+    "",
+    states.Misc["Indicators"],
+    function(enabled)
+        states.Misc["Indicators"] = enabled
+        indicatorsEnabled = enabled
+
+        if indicatorGui then
+            indicatorGui.Enabled = enabled
+        end
+    end
+)
+
+
+
+--==================================================
+-- MACROS PAGE
+--==================================================
+
+local macrosPage = createPage("Macros")
+
+--==================================================
+-- MACRO KEY CARD
+--==================================================
+
+local macroKeyCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 76),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, macrosPage)
+
+corner(macroKeyCard, 6)
+stroke(macroKeyCard, COLORS.Border, 1)
+
+local macroKeyIcon = new("Frame", {
+    Position = UDim2.fromOffset(12, 15),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, macroKeyCard)
+
+corner(macroKeyIcon, 8)
+
+local macroKeyTitle = label(
+    macroKeyCard,
+    "Macro Key",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+macroKeyTitle.Position = UDim2.fromOffset(28, 8)
+macroKeyTitle.Size = UDim2.fromOffset(100, 24)
+
+local macroKeyDesc = label(
+    macroKeyCard,
+    "bdc 2",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+macroKeyDesc.Position = UDim2.fromOffset(28, 30)
+macroKeyDesc.Size = UDim2.fromOffset(155, 25)
+macroKeyDesc.TextWrapped = true
+
+local macroKeyButton = new("TextButton", {
+    Position = UDim2.fromOffset(115, 42),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BorderSizePixel = 0,
+    Text = states.Misc["Macro Key"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, macroKeyCard)
+
+corner(macroKeyButton, 4)
+
+local waitingForMacroKey = false
+
+macroKeyButton.MouseButton1Click:Connect(function()
+    waitingForMacroKey = true
+
+    macroKeyButton.Text = "PRESS KEY"
+    macroKeyButton.BackgroundColor3 = COLORS.NavActive
+end)
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+
+    if gameProcessed then
+        return
+    end
+
+    if not waitingForMacroKey then
+        return
+    end
+
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.Unknown then
+        return
+    end
+
+    -- Save the new key
+    states.Misc["Macro Key"] = input.KeyCode
+
+    -- Update the button
+    macroKeyButton.Text = input.KeyCode.Name
+    macroKeyButton.BackgroundColor3 = COLORS.Nav
+
+    waitingForMacroKey = false
+
+    print("Macro Key changed to:", input.KeyCode.Name)
+end)
+
+
+local macroCard = new("Frame", {
+    Size = UDim2.fromOffset(420, 150),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, macrosPage)
+
+corner(macroCard, 6)
+stroke(macroCard, COLORS.Border, 1)
+
+local macroIcon = new("Frame", {
+    Position = UDim2.fromOffset(14, 16),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, macroCard)
+
+corner(macroIcon, 8)
+
+local macroTitle = label(
+    macroCard,
+    "Combo Macro",
+    13,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+macroTitle.Position = UDim2.fromOffset(30, 8)
+macroTitle.Size = UDim2.fromOffset(180, 24)
+
+local macroDescription = label(
+    macroCard,
+    "Executes the recorded input sequence.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+macroDescription.Position = UDim2.fromOffset(30, 30)
+macroDescription.Size = UDim2.fromOffset(300, 20)
+
+local sequenceFrame = new("Frame", {
+    Position = UDim2.fromOffset(14, 58),
+    Size = UDim2.fromOffset(392, 45),
+    BackgroundColor3 = COLORS.TopBar,
+    BorderSizePixel = 0
+}, macroCard)
+
+corner(sequenceFrame, 5)
+stroke(sequenceFrame, COLORS.Border, 1)
+
+local sequenceLabel = label(
+    sequenceFrame,
+    "bdc 3",
+    9,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+sequenceLabel.Position = UDim2.fromOffset(10, 0)
+sequenceLabel.Size = UDim2.new(1, -20, 1, 0)
+sequenceLabel.TextXAlignment = Enum.TextXAlignment.Right
+sequenceLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+local macroToggle = createToggle(
+    macroCard,
+    "",
+    comboMacroEnabled,
+    function(enabled)
+        comboMacroEnabled = enabled
+        states.Misc["Combo Macro"] = enabled
+        updateHUD()
+    end
+)
+
+local runMacroButton = new("TextButton", {
+    Position = UDim2.fromOffset(14, 112),
+    Size = UDim2.fromOffset(100, 26),
+    BackgroundColor3 = COLORS.PurpleDark,
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    Text = "RUN MACRO",
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, macroCard)
+
+corner(runMacroButton, 4)
+stroke(runMacroButton, COLORS.Border, 1)
+
+runMacroButton.MouseButton1Click:Connect(function()
+    task.spawn(runComboMacro)
+end)
+
+--==================================================
+-- MACRO 2 KEY CARD
+--==================================================
+
+local macro2KeyCard = new("Frame", {
+    Size = UDim2.fromOffset(200, 76),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, macrosPage)
+
+corner(macro2KeyCard, 6)
+stroke(macro2KeyCard, COLORS.Border, 1)
+
+local macro2KeyTitle = label(
+    macro2KeyCard,
+    "Macro 2 Key",
+    12,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+macro2KeyTitle.Position = UDim2.fromOffset(28, 8)
+macro2KeyTitle.Size = UDim2.fromOffset(120, 24)
+
+local macro2KeyDesc = label(
+    macro2KeyCard,
+    "bdc 3.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+macro2KeyDesc.Position = UDim2.fromOffset(28, 30)
+macro2KeyDesc.Size = UDim2.fromOffset(155, 25)
+macro2KeyDesc.TextWrapped = true
+
+local macro2KeyButton = new("TextButton", {
+    Position = UDim2.fromOffset(115, 42),
+    Size = UDim2.fromOffset(65, 24),
+    BackgroundColor3 = COLORS.Nav,
+    BackgroundTransparency = 0,5,
+    BorderSizePixel = 0,
+    Text = states.Misc["Macro 2 Key"].Name,
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, macro2KeyCard)
+
+corner(macro2KeyButton, 4)
+
+local waitingForMacro2Key = false
+
+macro2KeyButton.MouseButton1Click:Connect(function()
+    waitingForMacro2Key = true
+
+    macro2KeyButton.Text = "PRESS KEY"
+    macro2KeyButton.BackgroundColor3 = COLORS.NavActive
+end)
+
+UIS.InputBegan:Connect(function(input)
+
+    if not waitingForMacro2Key then
+        return
+    end
+
+    if input.UserInputType ~= Enum.UserInputType.Keyboard then
+        return
+    end
+
+    if input.KeyCode == Enum.KeyCode.Unknown then
+        return
+    end
+
+    states.Misc["Macro 2 Key"] = input.KeyCode
+
+    macro2KeyButton.Text = input.KeyCode.Name
+    macro2KeyButton.BackgroundColor3 = COLORS.Nav
+
+    waitingForMacro2Key = false
+end)
+
+
+--==================================================
+-- MACRO 2 CARD
+--==================================================
+
+local macro2Card = new("Frame", {
+    Size = UDim2.fromOffset(420, 150),
+    BackgroundColor3 = COLORS.Panel,
+    BackgroundTransparency = 0.15,
+    BorderSizePixel = 0
+}, macrosPage)
+
+corner(macro2Card, 6)
+stroke(macro2Card, COLORS.Border, 1)
+
+local macro2Icon = new("Frame", {
+    Position = UDim2.fromOffset(14, 16),
+    Size = UDim2.fromOffset(8, 8),
+    BackgroundColor3 = COLORS.Purple,
+    BorderSizePixel = 0
+}, macro2Card)
+
+corner(macro2Icon, 8)
+
+local macro2Title = label(
+    macro2Card,
+    "Combo Macro 2",
+    13,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+macro2Title.Position = UDim2.fromOffset(30, 8)
+macro2Title.Size = UDim2.fromOffset(180, 24)
+
+local macro2Description = label(
+    macro2Card,
+    "Executes the alternate recorded input sequence.",
+    9,
+    COLORS.Muted,
+    Enum.Font.Gotham
+)
+
+macro2Description.Position = UDim2.fromOffset(30, 30)
+macro2Description.Size = UDim2.fromOffset(300, 20)
+
+local macro2SequenceFrame = new("Frame", {
+    Position = UDim2.fromOffset(14, 58),
+    Size = UDim2.fromOffset(392, 45),
+    BackgroundColor3 = COLORS.TopBar,
+    BorderSizePixel = 0
+}, macro2Card)
+
+corner(macro2SequenceFrame, 5)
+stroke(macro2SequenceFrame, COLORS.Border, 1)
+
+local macro2SequenceLabel = label(
+    macro2SequenceFrame,
+    "bdc 2",
+    9,
+    COLORS.White,
+    Enum.Font.GothamBold
+)
+
+macro2SequenceLabel.Position = UDim2.fromOffset(10, 0)
+macro2SequenceLabel.Size = UDim2.new(1, -20, 1, 0)
+macro2SequenceLabel.TextXAlignment = Enum.TextXAlignment.Right
+macro2SequenceLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+local macro2Toggle = createToggle(
+    macro2Card,
+    "",
+    comboMacro2Enabled,
+    function(enabled)
+        comboMacro2Enabled = enabled
+        states.Misc["Combo Macro 2"] = enabled
+    end
+)
+
+local runMacro2Button = new("TextButton", {
+    Position = UDim2.fromOffset(14, 112),
+    Size = UDim2.fromOffset(110, 26),
+    BackgroundColor3 = COLORS.PurpleDark,
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    Text = "RUN MACRO 2",
+    TextColor3 = COLORS.White,
+    TextSize = 10,
+    Font = Enum.Font.GothamBold,
+    AutoButtonColor = false
+}, macro2Card)
+
+corner(runMacro2Button, 4)
+stroke(runMacro2Button, COLORS.Border, 1)
+
+runMacro2Button.MouseButton1Click:Connect(function()
+    task.spawn(runComboMacro2)
+end)
+
+--==================================================
+-- NAVIGATION
+--==================================================
+
+
+local navButtons = {}
+
+local function selectPage(name)
+
+    for pageName, page in pairs(pages) do
+        page.Visible = pageName == name
+    end
+
+    contentTitle.Text = name
+
+    for navName, button in pairs(navButtons) do
+
+        if navName == name then
+
+            button.BackgroundColor3 = COLORS.NavActive
+            button.TextColor3 = COLORS.White
+
+        else
+
+            button.BackgroundColor3 = COLORS.Nav
+            button.TextColor3 = COLORS.Muted
+
+        end
+    end
+end
+
+for _, name in ipairs({
+    "Misc",
+    "Macros"
+}) do
+
+    local button = new("TextButton", {
+        Size = UDim2.new(1, 0, 0, 34),
+        BackgroundColor3 = COLORS.Nav,
+        BorderSizePixel = 0,
+        Text = "   " .. name,
+        TextColor3 = COLORS.Muted,
+        TextSize = 11,
+        Font = Enum.Font.GothamBold,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        AutoButtonColor = false
+    }, navContainer)
+
+    corner(button, 4)
+
+    navButtons[name] = button
+
+    button.MouseButton1Click:Connect(function()
+        selectPage(name)
+    end)
+
+    button.MouseEnter:Connect(function()
+
+        if name ~= contentTitle.Text then
+
+            TweenService:Create(
+                button,
+                TweenInfo.new(
+                    0.15,
+                    Enum.EasingStyle.Quad,
+                    Enum.EasingDirection.Out
+                ),
+                {
+                    BackgroundColor3 = COLORS.NavHover,
+                    TextColor3 = COLORS.White
+                }
+            ):Play()
+
+        end
+    end)
+
+    button.MouseLeave:Connect(function()
+
+        if name ~= contentTitle.Text then
+
+            TweenService:Create(
+                button,
+                TweenInfo.new(
+                    0.15,
+                    Enum.EasingStyle.Quad,
+                    Enum.EasingDirection.Out
+                ),
+                {
+                    BackgroundColor3 = COLORS.Nav,
+                    TextColor3 = COLORS.Muted
+                }
+            ):Play()
+
+        end
+    end)
+end
+
+selectPage("Misc")
+
+--==================================================
+-- DRAGGING
+--==================================================
+
+local dragging = false
+local dragStart
+local startPos
+
+top.InputBegan:Connect(function(input)
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+
+        local delta = input.Position - dragStart
+
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+
+end)
+
+
+
+--==================================================
+-- OPEN / CLOSE
+-- ANIMATED + GLOW
+--==================================================
+
+local menuVisible = false
+local menuAnimating = false
+
+main.Visible = false
+menuScale.Scale = 0.88
+menuGlow.Transparency = 1
+
+local openInfo = TweenInfo.new(
+0.35,
+Enum.EasingStyle.Quint,
+Enum.EasingDirection.Out
+)
+
+local closeInfo = TweenInfo.new(
+0.25,
+Enum.EasingStyle.Quint,
+Enum.EasingDirection.In
+)
+
+-- Store the original transparency of UI objects
+local originalTransparency = {}
+
+for _, object in ipairs(main:GetDescendants()) do
+
+    if object:IsA("GuiObject") then
+
+        originalTransparency[object] = {
+            BackgroundTransparency = object.BackgroundTransparency
+        }
+
+        if object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            originalTransparency[object].TextTransparency =
+                object.TextTransparency
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            originalTransparency[object].ImageTransparency =
+                object.ImageTransparency
+        end
+
+    elseif object:IsA("UIStroke") then
+
+        if object ~= menuGlow then
+            originalTransparency[object] = {
+                Transparency = object.Transparency
+            }
+        end
+    end
+end
+    
+
+local function setMenuHidden()
+
+main.BackgroundTransparency = 1
+menuScale.Scale = 0.88
+menuGlow.Transparency = 1
+
+for object, values in pairs(originalTransparency) do
+
+    if object and object.Parent then
+
+        if object:IsA("UIStroke") then
+
+            object.Transparency = 1
+
+        elseif object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            object.BackgroundTransparency = 1
+            object.TextTransparency = 1
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            object.BackgroundTransparency = 1
+            object.ImageTransparency = 1
+
+        else
+
+            object.BackgroundTransparency = 1
+
+           end
+        end
+     end
+  end
+local function restoreMenuTransparency()
+
+main.BackgroundTransparency = 1
+
+for object, values in pairs(originalTransparency) do
+
+    if object and object.Parent then
+
+        if object:IsA("UIStroke") then
+
+            object.Transparency = values.Transparency
+
+        elseif object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            object.BackgroundTransparency =
+                values.BackgroundTransparency
+
+            object.TextTransparency =
+                values.TextTransparency or 0
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            object.BackgroundTransparency =
+                values.BackgroundTransparency
+
+            object.ImageTransparency =
+                values.ImageTransparency or 0
+
+        else
+
+            object.BackgroundTransparency =
+                values.BackgroundTransparency
+
+        end
+    end
+end
+
+end
+
+setMenuHidden()
+
+--==================================================
+-- OPEN MENU
+--==================================================
+
+local function openMenu()
+
+if menuAnimating or menuVisible then
+    return
+end
+
+menuAnimating = true
+menuVisible = true
+
+main.Visible = true
+
+-- Start from slightly smaller + invisible
+main.BackgroundTransparency = 1
+menuScale.Scale = 0.88
+menuGlow.Transparency = 1
+
+for object in pairs(originalTransparency) do
+
+    if object and object.Parent then
+
+        if object:IsA("UIStroke") then
+            object.Transparency = 1
+
+        elseif object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            object.BackgroundTransparency = 1
+            object.TextTransparency = 1
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            object.BackgroundTransparency = 1
+            object.ImageTransparency = 1
+
+        else
+
+            object.BackgroundTransparency = 1
+        end
+    end
+end
+
+-- Main panel
+TweenService:Create(
+    main,
+    openInfo,
+    {
+        BackgroundTransparency = 1
+    }
+):Play()
+
+-- Scale
+TweenService:Create(
+    menuScale,
+    openInfo,
+    {
+        Scale = 1
+    }
+):Play()
+
+-- Glow
+TweenService:Create(
+    menuGlow,
+    TweenInfo.new(
+        0.4,
+        Enum.EasingStyle.Sine,
+        Enum.EasingDirection.Out
+    ),
+    {
+        Transparency = 0.3,
+        Thickness = 2
+    }
+):Play()
+
+-- Fade all UI elements
+for object, values in pairs(originalTransparency) do
+
+    if object and object.Parent then
+
+        if object:IsA("UIStroke") then
+
+            TweenService:Create(
+                object,
+                openInfo,
+                {
+                    Transparency = values.Transparency
+                }
+            ):Play()
+
+        elseif object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            TweenService:Create(
+                object,
+                openInfo,
+                {
+                    BackgroundTransparency =
+                        values.BackgroundTransparency,
+
+                    TextTransparency =
+                        values.TextTransparency or 0
+                }
+            ):Play()
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            TweenService:Create(
+                object,
+                openInfo,
+                {
+                    BackgroundTransparency =
+                        values.BackgroundTransparency,
+
+                    ImageTransparency =
+                        values.ImageTransparency or 0
+                }
+            ):Play()
+
+        else
+
+            TweenService:Create(
+                object,
+                openInfo,
+                {
+                    BackgroundTransparency =
+                        values.BackgroundTransparency
+                }
+            ):Play()
+
+        end
+    end
+end
+
+task.delay(0.36, function()
+    menuAnimating = false
+end)
+
+end
+
+--==================================================
+-- CLOSE MENU
+--==================================================
+
+local function closeMenu()
+
+if menuAnimating or not menuVisible then
+    return
+end
+
+menuAnimating = true
+menuVisible = false
+
+-- Fade panel
+TweenService:Create(
+    main,
+    closeInfo,
+    {
+        BackgroundTransparency = 1
+    }
+):Play()
+
+-- Shrink
+TweenService:Create(
+    menuScale,
+    closeInfo,
+    {
+        Scale = 0.88
+    }
+):Play()
+
+-- Glow disappears
+TweenService:Create(
+    menuGlow,
+    closeInfo,
+    {
+        Transparency = 1
+    }
+):Play()
+
+-- Fade UI
+for object in pairs(originalTransparency) do
+
+    if object and object.Parent then
+
+        if object:IsA("UIStroke") then
+
+            TweenService:Create(
+                object,
+                closeInfo,
+                {
+                    Transparency = 1
+                }
+            ):Play()
+
+        elseif object:IsA("TextLabel")
+            or object:IsA("TextButton")
+            or object:IsA("TextBox") then
+
+            TweenService:Create(
+                object,
+                closeInfo,
+                {
+                    BackgroundTransparency = 1,
+                    TextTransparency = 1
+                }
+            ):Play()
+
+        elseif object:IsA("ImageLabel")
+            or object:IsA("ImageButton") then
+
+            TweenService:Create(
+                object,
+                closeInfo,
+                {
+                    BackgroundTransparency = 1,
+                    ImageTransparency = 1
+                }
+            ):Play()
+
+        else
+
+            TweenService:Create(
+                object,
+                closeInfo,
+                {
+                    BackgroundTransparency = 1
+                }
+            ):Play()
+
+        end
+    end
+end
+
+task.delay(0.26, function()
+
+    main.Visible = false
+
+    restoreMenuTransparency()
+
+    menuScale.Scale = 0.88
+    menuGlow.Transparency = 1
+
+    menuAnimating = false
+end)
+
+end
+
+--==================================================
+-- GLOW PULSE
+--==================================================
+
+task.spawn(function()
+
+while gui.Parent do
+
+    if menuVisible and not menuAnimating then
+
+        local pulseIn = TweenService:Create(
+            menuGlow,
+            TweenInfo.new(
+                1.1,
+                Enum.EasingStyle.Sine,
+                Enum.EasingDirection.InOut
+            ),
+            {
+                Transparency = 0.18,
+                Thickness = 2.5
+            }
+        )
+
+        pulseIn:Play()
+        pulseIn.Completed:Wait()
+
+        if not menuVisible then
+            continue
+        end
+
+        local pulseOut = TweenService:Create(
+            menuGlow,
+            TweenInfo.new(
+                1.1,
+                Enum.EasingStyle.Sine,
+                Enum.EasingDirection.InOut
+            ),
+            {
+                Transparency = 0.4,
+                Thickness = 2
+            }
+        )
+
+        pulseOut:Play()
+        pulseOut.Completed:Wait()
+
+    else
+
+        task.wait(0.1)
+
+    end
+end
+
+end)
+
+--==================================================
+-- EDITABLE MENU KEYBINDS
+--==================================================
+
+local heldKeys = {}
+
+UIS.InputBegan:Connect(function(input)
+
+if input.UserInputType ~= Enum.UserInputType.Keyboard then
+    return
+end
+
+local key = input.KeyCode
+
+-- Don't toggle while selecting a new keybind.
+if waitingForKey then
+    return
+end
+
+heldKeys[key] = true
+
+local key1 = states.Misc["Menu Key 1"]
+local key2 = states.Misc["Menu Key 2"]
+
+if heldKeys[key1] and heldKeys[key2] then
+
+    if menuVisible then
+        closeMenu()
+    else
+        openMenu()
+    end
+
+    -- Prevent repeated toggling while both keys
+    -- are being held down.
+    heldKeys[key1] = nil
+    heldKeys[key2] = nil
+end
+
+end)
+
+UIS.InputEnded:Connect(function(input)
+
+if input.UserInputType ~= Enum.UserInputType.Keyboard then
+    return
+end
+
+heldKeys[input.KeyCode] = nil
+
+end)
+
+local uis = game:GetService("UserInputService")
+local rs = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Stats = game:GetService("Stats")
+
+local plr = plrs.LocalPlayer
+local cam = workspace.CurrentCamera
+local mouse = plr:GetMouse()
+
+indicatorGui = Instance.new("ScreenGui")
+indicatorGui.Name = "FeatureHUD"
+indicatorGui.ResetOnSpawn = false
+indicatorGui.Parent = game.CoreGui
+
+indicatorsEnabled = states.Misc["Indicators"]
+indicatorGui.Enabled = indicatorsEnabled
+
+
+local function setIndicatorsVisible(enabled)
+    indicatorsEnabled = enabled
+    states.Misc["Indicators"] = enabled
+
+    if indicatorGui then
+        indicatorGui.Enabled = enabled
+    end
+end
+
+local frame = Instance.new("Frame")
+frame.AnchorPoint = Vector2.new(0, 0.5)
+frame.Position = UDim2.new(0, 10, 0.5, 0) -- Left side
+frame.Size = UDim2.new(0, 140, 0, 220)
+frame.BackgroundTransparency = 1
+frame.Parent = indicatorGui
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 4)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = frame
+
+local labels = {}
+
+local function makeLabel(name)
+    local lbl = Instance.new("TextLabel")
+    lbl.Name = name
+    lbl.Size = UDim2.new(1, 0, 0, 24)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 16
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = name
+    lbl.TextColor3 = Color3.fromRGB(120,120,120)
+    lbl.Parent = frame
+
+    labels[name] = lbl
+end
+
+makeLabel("Dash")
+makeLabel("M1 Lock")
+makeLabel("Auto M1")
+makeLabel("Aim")
+makeLabel("Trainer")
+makeLabel("Side Dash")
+makeLabel("Auto Block")
+
+local M1Config = {
+    Enabled      = true,
+    Range        = 13,
+    LockDuration = 0.22,
+}
+
+local DashConfig = {
+    DashToggleKey  = Enum.KeyCode.X,
+    GroundFullHP   = 3.0,
+    GroundMinHP    = 2.2,
+    AirFullHP      = 3.2,
+    AirMinHP       = 2.5,
+    NaturalFullHP  = 3.0,
+    NaturalMinHP   = 2.0,
+}
+
+local dashEnabled = true
+local sideDashBoostEnabled = false
+local SIDE_DASH_BOOST = 1.13
+SideDashBoostKey = Enum.KeyCode.C
+
+local M1_ANIM_IDS = {
+    [10469643643] = true,
+    [10469639222] = true,
+    [10469630950] = true,
+    [10469493270] = true,
+    [13294471966] = true,
+    [13532604085] = true,
+    [13532600125] = true,
+    [13532562418] = true,
+}
+
+local AimConfig = {
+    AimKey         = Enum.KeyCode.LeftControl,
+    AimToggleKey   = Enum.KeyCode.RightBracket,
+    TargetMode     = "Mouse (Sticky)",
+    TargetPart     = "Auto",
+    MaxRange       = 400,
+    Smoothing      = 38,
+    Prediction     = 0.250,
+    HighlightColor = Color3.fromRGB(0, 150, 255),
+    Noclip         = false,
+}
+
+local aimEnabled = true
+
+local LOCK_RANGE = 500
+local lockOn = false
+local lockedTarget = nil
+
+
+local HOVER_HEIGHT      = 0.25
+local OUTLINE_THICKNESS = 10
+local DASH_RADIUS       = 24
+local DASH_COLOR        = Color3.fromRGB(0, 0, 0)
+
+local BACKDASH = "rbxassetid://10491993682"
+
+local PAIR_ANIMS = {
+    "rbxassetid://10471336737",
+    "rbxassetid://10468665991",
+    "rbxassetid://10466974800",
+    "rbxassetid://12510170988",
+}
+
+local BLOCK_ANIM           = "rbxassetid://10470389827"
+local AUTO_M1_MAX_DISTANCE = 23
+local AUTO_M1_DELAY        = 0.05
+local autoM1Enabled        = false
+local autoM1Firing         = false
+
+local DETECTION_RANGE       = 22
+local SIDEDASH_RANGE        = 37
+local SIDEDASH_RANGE_EXPIRY = 0.5
+local REBLOCK_DELAY         = 0.01
+local BASE_HOLD             = 0.22
+local currentPing           = 30
+local autoblockEnabled      = false
+
+local M1_ANIMS = {
+    ["rbxassetid://10469493270"] = true,
+    ["rbxassetid://10469630950"] = true,
+    ["rbxassetid://10469639222"] = true,
+    ["rbxassetid://10469643643"] = true,
+    ["rbxassetid://13532562418"] = true,
+    ["rbxassetid://13532600125"] = true,
+    ["rbxassetid://13532604085"] = true,
+    ["rbxassetid://13294471966"] = true,
+    -- GENOS
+["rbxassetid://13491635433"] = true,
+["rbxassetid://13296577783"] = true,
+["rbxassetid://13295919399"] = true,
+["rbxassetid://13295936866"] = true,
+["rbxassetid://10503381238"] = true,
+
+-- SONIC
+["rbxassetid://13370310513"] = true,
+["rbxassetid://113390230973"] = true,
+["rbxassetid://13378751717"] = true,
+["rbxassetid://13378708199"] = true,
+["rbxassetid://13379003796"] = true,
+
+-- METAL BAT
+["rbxassetid://14357997687"] = true,
+["rbxassetid://14004222985"] = true,
+["rbxassetid://13997092940"] = true,
+["rbxassetid://14001963401"] = true,
+
+-- BLADE MASTER
+["rbxassetid://15259161390"] = true,
+["rbxassetid://15240216931"] = true,
+["rbxassetid://15240176873"] = true,
+["rbxassetid://15162694192"] = true,
+
+-- WILD PHY
+["rbxassetid://16515503507"] = true,
+["rbxassetid://16515520431"] = true,
+["rbxassetid://16515448089"] = true,
+["rbxassetid://16552234590"] = true,
+
+-- MARTIAL
+["rbxassetid://17889458563"] = true,
+["rbxassetid://17889461810"] = true,
+["rbxassetid://17889471098"] = true,
+["rbxassetid://17889290569"] = true,
+
+-- KID PROD
+["rbxassetid://123005629431309"] = true,
+["rbxassetid://100059874351664"] = true,
+["rbxassetid://104895379416342"] = true,
+["rbxassetid://134775406437626"] = true,
+}
+
+local SIDEDASH_ANIMS = {
+    ["rbxassetid://10480793962"] = true,
+    ["rbxassetid://10480796021"] = true,
+}
+local function setFeature(name, enabled)
+    local lbl = labels[name]
+    if not lbl then return end
+
+    if enabled then
+        lbl.TextColor3 = Color3.fromRGB(0,255,120)
+        lbl.TextTransparency = 0
+    else
+        lbl.TextColor3 = Color3.fromRGB(120,120,120)
+        lbl.TextTransparency = 0.4
+    end
+end
+
+function updateHUD()
+    setFeature("Dash", dashEnabled)
+    setFeature("M1 Lock", m1Enabled)
+    setFeature("Auto M1", autoM1Enabled)
+    setFeature("Aim", aimEnabled)
+    setFeature("Trainer", trainerEnabled)
+    setFeature("Side Dash", sideDashBoostEnabled)
+    setFeature("Auto Block", autoblockEnabled)
+end
+
+local function getPingScaledHold()
+    local pingRatio = math.clamp((currentPing - 30) / (200 - 30), 0, 1)
+    return BASE_HOLD + pingRatio * 0.08
+end
+
+task.spawn(function()
+    while true do
+        local ok, val = pcall(function()
+            return Stats.Network.ServerStatsItem["Data Ping"]:GetValue()
+        end)
+        if ok and val then
+            currentPing = val
+        else
+            local p = plr:GetNetworkPing()
+            if p then currentPing = p * 1000 end
+        end
+        task.wait(2)
+    end
+end)
+
+local lockTimer       = 0
+local lastAnimId      = nil
+local m1Target        = nil
+local prevM1Highlight = nil
+
+
+local aimTarget          = nil
+local aimTargetLeft      = false
+local aimNoclipTarget    = nil
+local originalCollisions = {}
+local partCache          = {}
+local prevAimHighlight   = nil
+
+local blocking         = false
+local unblockScheduled = false
+local lastUnblockTime  = 0
+
+local prevVelMag     = 0
+local recentSidedash = {}
+
+local trainerEnabled = false
+local activeRings    = {}
+local charRoot, charHum
+
+task.spawn(function()
+    local RobloxGui = game:GetService("CoreGui"):WaitForChild("RobloxGui", 10)
+    if not RobloxGui then return end
+    task.wait(2)
+    local function nukeContainer()
+        local trc = RobloxGui:FindFirstChild("TopRightContainer")
+        if trc then trc:Destroy() end
+    end
+    nukeContainer()
+    RobloxGui.ChildAdded:Connect(function(child)
+        if child.Name == "TopRightContainer" then child:Destroy() end
+    end)
+end)
+
+local function isAirborne(char)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    return hum.FloorMaterial == Enum.Material.Air
+end
+
+local function getDashMultiplier(char)
+    if not dashEnabled then return 1.0 end
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return 1.0 end
+    local hpRatio      = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+    local naturalTiles = DashConfig.NaturalMinHP + (DashConfig.NaturalFullHP - DashConfig.NaturalMinHP) * hpRatio
+    if isAirborne(char) then
+        local currentTiles = DashConfig.AirMinHP + (DashConfig.AirFullHP - DashConfig.AirMinHP) * hpRatio
+        return currentTiles / naturalTiles
+    else
+        local currentTiles = DashConfig.GroundMinHP + (DashConfig.GroundFullHP - DashConfig.GroundMinHP) * hpRatio
+        return currentTiles / naturalTiles
+    end
+end
+
+local function isAnimationRunning(char, animId)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return nil end
+    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+        if track.Animation and track.Animation.AnimationId:find(tostring(animId)) then
+            return track
+        end
+    end
+    return nil
+end
+
+local function setupDashModifier(char)
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    local childAdded = hrp.ChildAdded:Connect(function(c)
+        if c.Name ~= "dodgevelocity" then
+            return
+        end
+
+        local velclone = c:Clone()
+        velclone.Name = "newdodgevelocity"
+        velclone.Parent = hrp
+
+        task.spawn(function()
+            while c.Parent == hrp and velclone.Parent == hrp do
+                rs.RenderStepped:Wait()
+
+                if not c.Parent or not velclone.Parent then
+                    break
+                end
+
+                local velocity = c.Velocity
+                c.P = 0
+
+                local currentMultiplier = getDashMultiplier(char)
+
+                local sideDashAnim =
+                    isAnimationRunning(char, 10480796021)
+                    or isAnimationRunning(char, 10480793962)
+
+                local boost = 1
+
+                if sideDashAnim and sideDashBoostEnabled then
+                    boost = SIDE_DASH_BOOST
+                end
+
+                velclone.Velocity = Vector3.new(
+                    velocity.X * currentMultiplier * boost,
+                    velocity.Y,
+                    velocity.Z * currentMultiplier * boost
+                )
+            end
+        end)
+
+        task.wait()
+
+        local sideDashAnim =
+            isAnimationRunning(char, 10480796021)
+            or isAnimationRunning(char, 10480793962)
+
+        if sideDashAnim then
+            sideDashAnim:AdjustSpeed(1.0)
+        end
+    end)
+
+    local childRemoved = hrp.ChildRemoved:Connect(function(c)
+        if c.Name == "dodgevelocity" then
+            local newvel = hrp:FindFirstChild("newdodgevelocity")
+
+            if newvel then
+                newvel:Destroy()
+            end
+        end
+    end)
+
+    local inputConn = uis.InputEnded:Connect(function(input, gp)
+        if gp then
+            return
+        end
+
+        if input.KeyCode == states.Movement["Moveme Release Key"] then
+            local vel = hrp:FindFirstChild("moveme")
+
+            if vel and not vel:GetAttribute("End") then
+                vel:Destroy()
+            end
+        end
+    end)
+
+    char.Destroying:Connect(function()
+        childAdded:Disconnect()
+        childRemoved:Disconnect()
+        inputConn:Disconnect()
+    end)
+end
+
+local function getTurnSpeed(s)
+    if s <= 0 then return 0.9 end
+    local n = s / 100
+    return n < 0.5
+        and (0.5 * (1 - n * 2) + 0.05)
+        or  (0.15 * (0.1 ^ ((n - 0.5) * 2)))
+end
+
+local function clearAimHighlight(char)
+    if not char then return end
+    local hl = char:FindFirstChild("AimblockHighlight")
+    if hl then hl:Destroy() end
+end
+
+local function setCollision(character, shouldNoclip)
+    if not character then return end
+    if shouldNoclip then
+        if not partCache[character] then
+            local pList, oColl = {}, {}
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    pList[#pList + 1] = part
+                    oColl[part]       = part.CanCollide
+                end
+            end
+            partCache[character]          = pList
+            originalCollisions[character] = oColl
+        end
+        for _, p in ipairs(partCache[character]) do p.CanCollide = false end
+    else
+        local oColl = originalCollisions[character]
+        if oColl then
+            for part, state in pairs(oColl) do
+                if part and part.Parent then part.CanCollide = state end
+            end
+            originalCollisions[character] = nil
+            partCache[character]          = nil
+        end
+    end
+end
+
+local function getClosestLockTarget()
+    local character = plr.Character
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+
+    if not root then
+        return nil
+    end
+
+    local closest = nil
+    local closestDistance = LOCK_RANGE
+
+    for _, otherPlayer in ipairs(plrs:GetPlayers()) do
+        if otherPlayer ~= plr then
+            local otherCharacter = otherPlayer.Character
+            local otherRoot = otherCharacter and otherCharacter:FindFirstChild("HumanoidRootPart")
+            local otherHumanoid = otherCharacter and otherCharacter:FindFirstChildOfClass("Humanoid")
+
+            if otherRoot and otherHumanoid and otherHumanoid.Health > 0 then
+                local distance = (root.Position - otherRoot.Position).Magnitude
+
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closest = otherCharacter
+                end
+            end
+        end
+    end
+
+    return closest
+end
+
+local function startLockOn()
+    if lockOn then
+        return
+    end
+
+    local target = getClosestLockTarget()
+
+    if target then
+        lockedTarget = target
+        lockOn = true
+
+        local character = plr.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+        if humanoid then
+            humanoid.AutoRotate = false
+        end
+
+        print("Locked onto:", target.Name)
+    end
+end
+
+local function stopLockOn()
+    lockOn = false
+    lockedTarget = nil
+
+    local character = plr.Character
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+
+    if humanoid then
+        humanoid.AutoRotate = true
+    end
+
+    print("Lock released")
+end
+
+
+
+
+local function getAimTarget()
+    local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not root then
+        return
+    end
+
+    local target, dist = nil, math.huge
+    local isCursor = AimConfig.TargetMode:find("Mouse")
+
+    for _, v in pairs((workspace:FindFirstChild("Live") or workspace):GetChildren()) do
+        local isPlayer = plrs:GetPlayerFromCharacter(v)
+
+        if isPlayer and v ~= plr.Character then
+            if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
+                local tRoot = v.HumanoidRootPart
+                local mag = (root.Position - tRoot.Position).Magnitude
+
+                if mag <= AimConfig.MaxRange then
+                    if isCursor then
+                        local pos, onScreen = cam:WorldToViewportPoint(tRoot.Position)
+
+                        if onScreen then
+                            local sDist = (
+                                Vector2.new(mouse.X, mouse.Y) -
+                                Vector2.new(pos.X, pos.Y)
+                            ).Magnitude
+
+                            if sDist < dist then
+                                dist = sDist
+                                target = v
+                            end
+                        end
+                    elseif mag < dist then
+                        dist = mag
+                        target = v
+                    end
+                end
+            end
+        end
+    end
+
+    return target
+end
+local function getAutoPart(char)
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local vel = root.AssemblyLinearVelocity
+    if vel.Magnitude < 1 then return root end
+    local lv = root.CFrame:VectorToObjectSpace(vel)
+    if lv.X > 1  then return char:FindFirstChild("RightLowerArm") or char:FindFirstChild("Right Arm") or root end
+    if lv.X < -1 then return char:FindFirstChild("LeftLowerArm")  or char:FindFirstChild("Left Arm")  or root end
+    return root
+end
+
+local function updateAimHighlight(targetChar)
+    if prevAimHighlight and prevAimHighlight ~= targetChar then
+        clearAimHighlight(prevAimHighlight)
+    end
+    prevAimHighlight = targetChar
+    if targetChar then
+        local hl = targetChar:FindFirstChild("AimblockHighlight") or Instance.new("Highlight", targetChar)
+        hl.Name                = "AimblockHighlight"
+        hl.FillColor           = AimConfig.HighlightColor
+        hl.FillTransparency    = 1
+        hl.OutlineColor        = AimConfig.HighlightColor
+        hl.OutlineTransparency = 1
+        hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop
+    end
+end
+
+local rayParams = RaycastParams.new()
+rayParams.FilterType  = Enum.RaycastFilterType.Exclude
+rayParams.IgnoreWater = true
+
+local function getGroundY(position)
+    local ignoreList = {plr.Character}
+    rayParams.FilterDescendantsInstances = ignoreList
+    local result = workspace:Raycast(position + Vector3.new(0, 5, 0), Vector3.new(0, -20, 0), rayParams)
+    return result and (result.Position.Y + HOVER_HEIGHT) or (position.Y - 3)
+end
+
+local function createRing(radius, color, transparency, doubleSided)
+    local part = Instance.new("Part")
+    part.Anchored     = true
+    part.CanCollide   = false
+    part.CanTouch     = false
+    part.CanQuery     = false
+    part.Transparency = 1
+    part.Size         = Vector3.new(radius * 2, 0.1, radius * 2)
+    part.Parent       = workspace
+
+    local function makeSurface(face)
+        local gui = Instance.new("SurfaceGui")
+        gui.Face           = face
+        gui.AlwaysOnTop    = true
+        gui.LightInfluence = 0
+        gui.SizingMode     = Enum.SurfaceGuiSizingMode.PixelsPerStud
+        gui.PixelsPerStud  = 60
+        gui.Parent         = part
+
+        local frame = Instance.new("Frame")
+        frame.Size                   = UDim2.fromScale(1, 1)
+        frame.BackgroundTransparency = 1
+        frame.Parent                 = gui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent       = frame
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness    = OUTLINE_THICKNESS
+        stroke.Color        = color
+        stroke.Transparency = transparency or 0.1
+        stroke.Parent       = frame
+    end
+
+    makeSurface(Enum.NormalId.Top)
+    if doubleSided then makeSurface(Enum.NormalId.Bottom) end
+    return part
+end
+
+local dashRing = createRing(DASH_RADIUS, DASH_COLOR, 1)
+table.insert(activeRings, dashRing)
+
+local function setRingVisibility(enabled)
+    for _, ring in ipairs(activeRings) do
+        if ring and ring.Parent then
+            for _, gui in ipairs(ring:GetChildren()) do
+                if gui:IsA("SurfaceGui") then
+                    for _, frame in ipairs(gui:GetChildren()) do
+                        if frame:IsA("Frame") then
+                            local stroke = frame:FindFirstChildOfClass("UIStroke")
+                            if stroke then stroke.Enabled = enabled end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+setRingVisibility(false)
+
+local function getPlayingM1Anim(char)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return nil end
+    for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+        if track.Animation and track.WeightCurrent > 0.5 then
+            local id = tonumber(track.Animation.AnimationId:match("%d+$"))
+            if id and M1_ANIM_IDS[id] then return id end
+        end
+    end
+    return nil
+end
+
+local function getNearestTarget(root)
+    local target, closest = nil, math.huge
+    for _, v in pairs((workspace:FindFirstChild("Live") or workspace):GetChildren()) do
+        if v ~= plr.Character and v:IsA("Model") then
+            local tRoot = v:FindFirstChild("HumanoidRootPart")
+            local tHum  = v:FindFirstChildOfClass("Humanoid")
+            if tRoot and tHum and tHum.Health > 0 then
+                local dist = (root.Position - tRoot.Position).Magnitude
+                if dist <= M1Config.Range and dist < closest then
+                    closest = dist
+                    target  = v
+                end
+            end
+        end
+    end
+    return target
+end
+
+local function updateM1Highlight(targetChar)
+    if prevM1Highlight and prevM1Highlight ~= targetChar then
+        local old = prevM1Highlight:FindFirstChild("M1LockHighlight")
+        if old then old:Destroy() end
+    end
+    prevM1Highlight = targetChar
+    if targetChar then
+        local hl = targetChar:FindFirstChild("M1LockHighlight") or Instance.new("Highlight", targetChar)
+        hl.Name                = "M1LockHighlight"
+        hl.FillColor           = Color3.fromRGB(255, 100, 0)
+        hl.FillTransparency    = 0.85
+        hl.OutlineColor        = Color3.fromRGB(255, 100, 0)
+        hl.OutlineTransparency = 0
+        hl.DepthMode           = Enum.HighlightDepthMode.AlwaysOnTop
+    end
+end
+
+local function getLocalRoot()
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    return root and root.Position or nil
+end
+
+local function autoM1AnimsPlaying(otherCharacter)
+    local otherHumanoid = otherCharacter:FindFirstChildOfClass("Humanoid")
+    if not otherHumanoid then return false end
+    local otherAnimator = otherHumanoid:FindFirstChildOfClass("Animator")
+    if not otherAnimator then return false end
+
+    local foundBackdash, foundPair = false, false
+
+    for _, track in ipairs(otherAnimator:GetPlayingAnimationTracks()) do
+        local id = track.Animation.AnimationId
+        if id == BACKDASH then foundBackdash = true end
+        for _, pairAnim in ipairs(PAIR_ANIMS) do
+            if id == pairAnim then foundPair = true end
+        end
+        if foundBackdash and foundPair then return true end
+    end
+
+    return false
+end
+
+local function shouldAutoM1()
+    local localRoot = getLocalRoot()
+    if not localRoot then return false end
+
+    for _, player in ipairs(plrs:GetPlayers()) do
+        if player ~= plr and player.Character then
+            local otherRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if otherRoot then
+                local distance = (localRoot - otherRoot.Position).Magnitude
+                if distance <= AUTO_M1_MAX_DISTANCE and autoM1AnimsPlaying(player.Character) then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
+end
+
+local function isBlocking()
+    local char = plr.Character
+    local hum  = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then return false end
+    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        if track.Animation.AnimationId == BLOCK_ANIM then return true end
+    end
+    return false
+end
+
+local function simulateM1()
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+end
+
+local function simulateUnblock()
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+end
+
+local function sendBlock(state)
+    VirtualInputManager:SendKeyEvent(state, Enum.KeyCode.F, false, game)
+end
+
+local function doUnblock()
+    blocking         = false
+    unblockScheduled = false
+    lastUnblockTime  = tick()
+    sendBlock(false)
+    if aimTarget then
+        clearAimHighlight(aimTarget)
+        prevAimHighlight = nil
+    end
+    aimTarget     = nil
+    aimTargetLeft = false
+end
+
+local function dropBlock()
+    if blocking then
+        blocking         = false
+        unblockScheduled = false
+        sendBlock(false)
+        if aimTarget then
+            clearAimHighlight(aimTarget)
+            prevAimHighlight = nil
+        end
+        aimTarget     = nil
+        aimTargetLeft = false
+    end
+end
+
+local function getPlayerRange(attacker)
+    local lastDash = recentSidedash[attacker]
+    if lastDash and (tick() - lastDash) < SIDEDASH_RANGE_EXPIRY then
+        return SIDEDASH_RANGE
+    end
+    return DETECTION_RANGE
+end
+
+local function onM1Detected(attacker)
+    if not autoblockEnabled then return end
+    local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local otherRoot = attacker.Character and attacker.Character:FindFirstChild("HumanoidRootPart")
+    if not otherRoot then return end
+    if (root.Position - otherRoot.Position).Magnitude > getPlayerRange(attacker) then return end
+
+    local now = tick()
+    if (now - lastUnblockTime) < REBLOCK_DELAY then return end
+
+    if not blocking then
+        blocking = true
+        sendBlock(true)
+    end
+    if not unblockScheduled then
+        unblockScheduled = true
+        task.delay(getPingScaledHold(), doUnblock)
+    end
+end
+
+local function onSidedashDetected(attacker)
+    if not autoblockEnabled then return end
+    local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local otherRoot = attacker.Character and attacker.Character:FindFirstChild("HumanoidRootPart")
+    if not otherRoot then return end
+    if (root.Position - otherRoot.Position).Magnitude <= SIDEDASH_RANGE then
+        recentSidedash[attacker] = tick()
+    end
+end
+
+local function watchPlayer(player)
+    if player == plr then return end
+    local function onChar(char)
+        local hum = char:WaitForChild("Humanoid", 10)
+        if not hum then return end
+        local animator = hum:WaitForChild("Animator", 10)
+        if not animator then return end
+        animator.AnimationPlayed:Connect(function(track)
+            local id = track.Animation and track.Animation.AnimationId
+            if not id then return end
+            if M1_ANIMS[id] then
+                onM1Detected(player)
+            elseif SIDEDASH_ANIMS[id] then
+                onSidedashDetected(player)
+            end
+        end)
+    end
+    if player.Character then onChar(player.Character) end
+    player.CharacterAdded:Connect(onChar)
+end
+
+for _, p in ipairs(plrs:GetPlayers()) do task.spawn(watchPlayer, p) end
+plrs.PlayerAdded:Connect(watchPlayer)
+
+local function onCharacterAdded(char)
+    charRoot = char:WaitForChild("HumanoidRootPart")
+    charHum  = char:WaitForChild("Humanoid")
+    rayParams.FilterDescendantsInstances = {char}
+    setupDashModifier(char)
+end
+
+if plr.Character then onCharacterAdded(plr.Character) end
+plr.CharacterAdded:Connect(onCharacterAdded)
+
+uis.InputBegan:Connect(function(input, gp)
+    if gp then return end
+
+    if input.UserInputType == Enum.UserInputType.Keyboard
+    and input.KeyCode == states.Misc["Macro Key"] then
+
+    task.spawn(runComboMacro)
+    return
+end
+
+if input.UserInputType == Enum.UserInputType.Keyboard
+and input.KeyCode == states.Misc["Macro 2 Key"] then
+
+    task.spawn(runComboMacro2)
+    return
+end
+
+
+if input.KeyCode == Enum.KeyCode.LeftControl then
+    startLockOn()
+    return
+end
+
+    if input.KeyCode == DashConfig.DashToggleKey then
+        dashEnabled = not dashEnabled
+        updateHUD()
+
+    elseif input.KeyCode == Enum.KeyCode.LeftBracket then
+        m1Enabled = not m1Enabled
+        updateHUD()
+        if not m1Enabled then
+            m1Target  = nil
+            lockTimer = 0
+            updateM1Highlight(nil)
+        end
+    elseif input.KeyCode == Enum.KeyCode.V then
+    autoM1Enabled = not autoM1Enabled
+    updateHUD()
+    print("Auto M1:", autoM1Enabled and "ON" or "OFF")
+    elseif input.KeyCode == AimConfig.AimToggleKey then
+        aimEnabled = not aimEnabled
+        updateHUD()
+        if not aimEnabled then
+            aimTarget     = nil
+            aimTargetLeft = false
+        end
+
+    elseif input.KeyCode == Enum.KeyCode.T then
+        trainerEnabled = not trainerEnabled
+        updateHUD()
+        setRingVisibility(trainerEnabled)
+    
+    elseif input.KeyCode == SideDashBoostKey then
+    sideDashBoostEnabled = not sideDashBoostEnabled
+    updateHUD()
+    print("Side Dash Boost:", sideDashBoostEnabled and "ON" or "OFF")
+  
+    elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+        autoblockEnabled = true
+        updateHUD()
+    end
+end)
+
+uis.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+        stopLockOn()
+        return
+    end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        autoblockEnabled = false
+        updateHUD()
+        dropBlock()
+    end
+end)
+
+
+local function handleRagdollState(char)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    local state = hum:GetState()
+    return char:GetAttribute("Ragdoll") == true
+        or state == Enum.HumanoidStateType.Ragdoll
+        or state == Enum.HumanoidStateType.FallingDown
+        or state == Enum.HumanoidStateType.Physics
+        or hum.PlatformStand
+end
+
+rs.RenderStepped:Connect(function(dt)
+    local char = plr.Character
+    local hum  = char and char:FindFirstChildOfClass("Humanoid")
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not (hum and root) then return end
+
+-- CTRL LOCK-ON
+    if lockOn and lockedTarget then
+        local targetRoot = lockedTarget:FindFirstChild("HumanoidRootPart")
+        local targetHumanoid = lockedTarget:FindFirstChildOfClass("Humanoid")
+
+        if not targetRoot or not targetHumanoid or targetHumanoid.Health <= 0 then
+            stopLockOn()
+        else
+            hum.AutoRotate = false
+
+            local direction = Vector3.new(
+                targetRoot.Position.X - root.Position.X,
+                0,
+                targetRoot.Position.Z - root.Position.Z
+            )
+
+            if direction.Magnitude > 0.001 then
+                root.CFrame = CFrame.lookAt(
+                    root.Position,
+                    root.Position + direction.Unit
+                )
+            end
+        end
+    end
+
+    if trainerEnabled and charRoot then
+        local baseY   = getGroundY(charRoot.Position)
+        local basePos = Vector3.new(charRoot.Position.X, baseY, charRoot.Position.Z)
+        dashRing.CFrame = CFrame.new(basePos)
+    end
+
+        if M1Config.Enabled and m1Enabled and cam.CameraType ~= Enum.CameraType.Scriptable then
+
+        local currentAnimId = getPlayingM1Anim(char)
+
+        if currentAnimId and currentAnimId ~= lastAnimId then
+            local t = getNearestTarget(root)
+            if t then
+                m1Target  = t
+                lockTimer = M1Config.LockDuration
+            else
+                m1Target  = nil
+                lockTimer = 0
+            end
+        end
+
+        lastAnimId = currentAnimId
+        if not currentAnimId then lastAnimId = nil end
+
+        if lockTimer > 0 then lockTimer = lockTimer - dt end
+
+                local shouldLock = lockTimer > 0 and m1Target ~= nil and m1Target.Parent ~= nil
+
+        if not shouldLock then
+            m1Target = nil
+            updateM1Highlight(nil)
+            if not handleRagdollState(char) then hum.AutoRotate = true end
+        else
+            local tRoot = m1Target:FindFirstChild("HumanoidRootPart")
+            if not tRoot then
+                m1Target = nil
+                updateM1Highlight(nil)
+                if not handleRagdollState(char) then hum.AutoRotate = true end
+            else
+                updateM1Highlight(m1Target)
+                if not handleRagdollState(char) then
+                    hum.AutoRotate = false
+                    local toTarget = Vector3.new(tRoot.Position.X - root.Position.X, 0, tRoot.Position.Z - root.Position.Z)
+                    if toTarget.Magnitude >= 1e-4 then
+                        root.CFrame = CFrame.new(root.Position, root.Position + toTarget.Unit)
+                    end
+                end
+            end
+        end
+    end
+
+    local isHolding = uis:IsKeyDown(AimConfig.AimKey) and aimEnabled
+
+    if isHolding then
+        local isSticky = AimConfig.TargetMode:find("Sticky")
+        if aimTarget and not aimTarget.Parent then
+            aimTarget     = nil
+            aimTargetLeft = true
+        elseif not aimTarget then
+            if not isSticky or not aimTargetLeft then
+                aimTarget = getAimTarget()
+            end
+        elseif not isSticky then
+            aimTarget = getAimTarget()
+        end
+    else
+        if not blocking then
+            if aimTarget then
+                clearAimHighlight(aimTarget)
+                prevAimHighlight = nil
+            end
+            aimTarget     = nil
+            aimTargetLeft = false
+        end
+    end
+
+    if blocking and not isHolding then
+        local isSticky = AimConfig.TargetMode:find("Sticky")
+        if aimTarget and not aimTarget.Parent then
+            aimTarget     = nil
+            aimTargetLeft = true
+        elseif not aimTarget then
+            if not isSticky or not aimTargetLeft then
+                aimTarget = getAimTarget()
+            end
+        elseif not isSticky then
+            aimTarget = getAimTarget()
+        end
+    end
+
+    updateAimHighlight(isHolding and aimTarget or nil)
+
+    if aimTarget ~= aimNoclipTarget then
+        setCollision(aimNoclipTarget, false)
+        aimNoclipTarget = aimTarget
+    end
+    if aimTarget then setCollision(aimTarget, AimConfig.Noclip) end
+
+    if isHolding and aimTarget then
+        local tRoot = aimTarget:FindFirstChild("HumanoidRootPart")
+        local pName = AimConfig.TargetPart
+        local tPart = (pName == "Auto" and getAutoPart(aimTarget))
+                   or aimTarget:FindFirstChild(pName)
+                   or tRoot
+
+        if tPart and tRoot and not handleRagdollState(char) then
+            hum.AutoRotate = false
+
+            local dist     = (root.Position - tRoot.Position).Magnitude
+            local velocity = tRoot.AssemblyLinearVelocity
+            local velMag   = velocity.Magnitude
+
+            local toTargetFlat = Vector3.new(tRoot.Position.X - root.Position.X, 0, tRoot.Position.Z - root.Position.Z)
+            local velocityFlat = Vector3.new(velocity.X, 0, velocity.Z)
+
+            local approachDot = 0
+            if toTargetFlat.Magnitude > 1e-4 and velocityFlat.Magnitude > 1e-4 then
+                approachDot = toTargetFlat.Unit:Dot(velocityFlat.Unit)
+            end
+
+            local isApproaching   = approachDot < -0.15
+            local lateralVelocity = velocityFlat - (toTargetFlat.Unit * math.max(0, -approachDot) * velocityFlat.Magnitude)
+
+            local basePred = AimConfig.Prediction
+            local finalPred
+
+            if isApproaching then
+                local af = math.abs(approachDot)
+                local df = math.clamp(dist / 20, 0, 1)
+                finalPred = basePred * (0.15 + 0.25 * df) * (1 - af * 0.75)
+            else
+                local smoothedVelMag = prevVelMag + (velMag - prevVelMag) * 0.25
+                prevVelMag           = smoothedVelMag
+                local lateralBoost   = math.clamp(1 + smoothedVelMag / 30, 1, 2.5)
+                local closeBoost     = dist < 25 and 1.4 or 1
+                finalPred            = basePred * lateralBoost * closeBoost
+            end
+
+            local predictedVel = isApproaching and lateralVelocity or velocity
+            local targetPos    = tPart.Position + predictedVel * finalPred
+
+            local lookFlat    = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
+            local toTargetVec = Vector3.new(targetPos.X - root.Position.X, 0, targetPos.Z - root.Position.Z)
+
+            if lookFlat.Magnitude > 1e-4 and toTargetVec.Magnitude > 1e-4 then
+                local angle = math.min(
+                    math.acos(math.clamp(lookFlat.Unit:Dot(toTargetVec.Unit), -1, 1)),
+                    math.rad(45)
+                )
+                local turnSpeed  = getTurnSpeed(AimConfig.Smoothing) * math.clamp(1 + velMag / 100, 1, 1.5)
+                local direction  = lookFlat:Cross(toTargetVec).Y >= 0 and 1 or -1
+                local currentRot = math.atan2(lookFlat.X, lookFlat.Z)
+                local newRot     = currentRot + angle * turnSpeed * direction
+                root.CFrame      = CFrame.new(root.Position, root.Position + Vector3.new(math.sin(newRot), 0, math.cos(newRot)))
+            end
+        end
+    else
+        if not handleRagdollState(char) and not (M1Config.Enabled and m1Enabled and lockTimer > 0) then
+            hum.AutoRotate = true
+        end
+    end
+end)
+
+rs.Heartbeat:Connect(function()
+    if autoM1Enabled and shouldAutoM1() and not autoM1Firing then
+        autoM1Firing = true
+        task.delay(AUTO_M1_DELAY, function()
+            if isBlocking() then
+                simulateUnblock()
+            end
+            simulateM1()
+            autoM1Firing = false
+        end)
+    end
+end)
